@@ -1,4 +1,5 @@
 import urllib
+from datetime import datetime
 
 import sqlalchemy as sa
 import pandas as pd
@@ -30,9 +31,12 @@ class DatabaseManager:
 
 
     def insert_df(self, df):
-        print(f'inserting records from {df.name}')
+        print(f'inserting {len(df)} records from {df.name}')
+        print(f'time: {datetime.now().strftime("%H:%M:%S")}')
         con = self.engine.connect()
-        df.to_sql(f'{self.schema}.{df.name}', con=con, if_exists='replace', index=False, chunksize=25000)
+        df.to_sql(df.name, schema=self.schema, con=con, if_exists='replace', index=False, chunksize=25000)
+        print(f'done inserting')
+        print(f'time: {datetime.now().strftime("%H:%M:%S")}')
 
 
 db = DatabaseManager.from_object(Config)
