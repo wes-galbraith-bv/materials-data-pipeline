@@ -35,7 +35,8 @@ class DatabaseManager:
     def insert_df(self, df):
         logger.info(f'inserting {len(df)} records from {df.name}')
         con = self.engine.connect()
-        df.to_sql(df.name, schema=self.schema, con=con, if_exists='replace', index=False, chunksize=25000)
+        dtype = Config.dtypes[df.name]
+        df.to_sql(df.name, schema=self.schema, con=con, if_exists='replace', index=False, chunksize=25000, dtype=dtype)
         logger.info(f'done inserting')
 
 
