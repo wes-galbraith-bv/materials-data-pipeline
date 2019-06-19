@@ -1,19 +1,23 @@
+from logger import logger
+
 import pandas as pd
 
 from config import Config
-from db import DatabaseManager
 from csv_reader import CSVReader, Target
+from db import DatabaseManager
 
 
 class Pipeline:
 
     def extract(self):
+        logger.info('extracting csvs from shared drive')
         csv_reader = CSVReader(Config.directory)
         csv_reader.targets = [Target(*params) for params in Config.targets]
         received, shipped, history, picked = csv_reader.read()
         return received, shipped, history, picked
 
     def clean(self, received, shipped, history, picked):
+        logger.info('Cleaning data. Scrub scrub scrub.')
         received = received.copy()
         shipped = shipped.copy()
         history = history.copy()
@@ -48,6 +52,7 @@ class Pipeline:
         return received, shipped, history, picked
 
     def agg_history(self, history):
+        logger.info('aggregating site equipment deployment history report')
         history = history.copy()
         history_grouped = history.groupby(by=['AuthNo', 'ProjectSiteId'])
         def max_ship_date(df):
@@ -61,6 +66,7 @@ class Pipeline:
         return history_agg
 
     def agg_picked(self, picked):
+        logger.info('aggregating inventory picked report')
         picked = picked.copy()
         picked = picked.astype({'AuthNo': 'object'})
         picked_grouped = picked.groupby(by=['ProjectSiteId', 'AuthNo', 'ItemNo'])
@@ -68,6 +74,7 @@ class Pipeline:
         return picked_agg
 
     def merge_history_picked(self, history_agg, picked_agg):
+        logger.info('merging site equipment deployment history and inventory picked')
         history_agg = history_agg.copy()
         picked_agg = picked_agg.copy()
         materials = history_agg.merge(picked_agg, how='left', on=['ProjectSiteId', 'AuthNo'])
@@ -75,6 +82,7 @@ class Pipeline:
         return materials
 
     def agg_shipped(self, shipped):
+        logger.info('aggregating inventory shipped report')
         shipped = shipped.copy()
         shipped_grouped = shipped.groupby(by=['AuthNo', 'ProjectSiteId', 'ItemNo'])
         #Using first to aggregate PONo is probably incorrect, but let us ignore that for the time being in the interest of getting this steaming pile of junk working.
@@ -83,18 +91,17 @@ class Pipeline:
         return shipped_agg
 
     def merge_materials_shipped(self, materials, shipped):
+        logger.info('merging materials table with inventory shipped')
         materials = materials.copy()
         shipped = shipped.copy()
         materials = materials.astype({'AuthNo': 'int64'})
         shipped = shipped.astype({'AuthNo': 'int64'})
-        assert (materials.dtypes[['AuthNo', 'ProjectSiteId', 'ItemNo']] == shipped.dtypes[['AuthNo', 'ProjectSiteId', 'ItemNo']]).all()
-        print(materials.dtypes)
-        print(shipped.dtypes)
-        assert ((materials.ProjectSiteId.isin(shipped.ProjectSiteId)) & (materials.AuthNo.isin(shipped.AuthNo)) & (materials.ItemNo.isin(shipped.ItemNo))).sum() == 0
-        print(materials.columns)
+        try:
+            assert (materials.dtypes[['AuthNo', 'ProjectSiteId', 'ItemNo']] == shipped.dtypes[['AuthNo', 'ProjectSiteId', 'ItemNo']]).all()
+            assert ((materials.ProjectSiteId.isin(shipped.ProjectSiteId)) & (materials.AuthNo.isin(shipped.AuthNo)) & (materials.ItemNo.isin(shipped.ItemNo))).sum() == 0
+        except AssertionError as ae:
+            logger.error(str(ae))
         materials = materials.merge(shipped, how='left', on=['AuthNo', 'ProjectSiteId'])
-        materials.to_csv('materials-leftjoin-shipped.csv')
-        print(materials.shape)
         materials['ItemNo'] = materials.ItemNo_y.fillna(materials.ItemNo_x)
         materials = materials.reset_index()
         materials = materials.drop(['index', 'ItemNo_x', 'ItemNo_y'], axis=1)
@@ -102,6 +109,7 @@ class Pipeline:
         return materials
 
     def agg_received(self, received):
+        logger.info('aggregating inventory received report')
         received = received.copy()
         def sum_qty_most_recent_everything_else(df):
             received_qty = df.ReceivedQuantity.sum()
@@ -113,6 +121,7 @@ class Pipeline:
         return received_agg
 
     def transform(self, received, shipped, history, picked):
+        logger.info('transforming data into a more workable format.')
         received = received.copy()
         shipped = shipped.copy()
         history = history.copy()
@@ -128,12 +137,14 @@ class Pipeline:
         return received, shipped, history, picked
 
     def load(self, *dfs):
+        logger.info('Inserting data to database')
         db = DatabaseManager(Config.driver, Config.username, Config.password,
                              Config.server, Config.database, Config.schema)
         for df in dfs:
             db.insert_df(df)
 
     def run(self):
+        logger.info('running pipeline')
         dfs = self.extract()
         dfs = self.clean(*dfs)
         dfs = self.transform(*dfs)
@@ -144,6 +155,7 @@ class Pipeline:
 class MergePipeline(Pipeline):
 
     def transform(self, received, shipped, history, picked):
+        logger.info('transforming data into a more workable format. This should create two tables.')
         received = received.copy()
         shipped = shipped.copy()
         history = history.copy()
