@@ -25,6 +25,7 @@ class CSVReader:
             files = (f for f in os.scandir(path) if f.is_file() and t.filter(f))
             most_recent = max(files, key=lambda f: f.stat().st_ctime)
             path_to_csv = most_recent.path
+            print(path_to_csv)
             usecols = lambda c: c in t.aliases
             df = pd.read_csv(path_to_csv, usecols=usecols)
             df.columns = [t.aliases[c] for c in df.columns]

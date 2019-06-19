@@ -14,6 +14,11 @@ class Pipeline:
         return received, shipped, history, picked
 
     def clean(self, received, shipped, history, picked):
+        received = received.copy()
+        shipped = shipped.copy()
+        history = history.copy()
+        picked = picked.copy()
+
         received = received.dropna(subset=['ProjectSiteId'])
         shipped = shipped.dropna(subset=['ProjectSiteId'])
         history = history.dropna(subset=['ProjectSiteId'])
@@ -43,6 +48,7 @@ class Pipeline:
         return received, shipped, history, picked
 
     def agg_history(self, history):
+        history = history.copy()
         history_grouped = history.groupby(by=['AuthNo', 'ProjectSiteId'])
         def max_ship_date(df):
             df = df.reset_index()
@@ -55,31 +61,40 @@ class Pipeline:
         return history_agg
 
     def agg_picked(self, picked):
+        picked = picked.copy()
         picked = picked.astype({'AuthNo': 'object'})
         picked_grouped = picked.groupby(by=['ProjectSiteId', 'AuthNo', 'ItemNo'])
         picked_agg = picked_grouped.sum().reset_index()
         return picked_agg
 
     def merge_history_picked(self, history_agg, picked_agg):
+        history_agg = history_agg.copy()
+        picked_agg = picked_agg.copy()
         materials = history_agg.merge(picked_agg, how='left', on=['ProjectSiteId', 'AuthNo'])
         materials = materials.drop('level_2', axis=1)
         return materials
 
     def agg_shipped(self, shipped):
+        shipped = shipped.copy()
         shipped_grouped = shipped.groupby(by=['AuthNo', 'ProjectSiteId', 'ItemNo'])
-        shipped_agg = shipped_grouped.agg({'DeployedDate': 'max', 'DeployedQuantity': 'sum'})
+        #Using first to aggregate PONo is probably incorrect, but let us ignore that for the time being in the interest of getting this steaming pile of junk working.
+        shipped_agg = shipped_grouped.agg({'DeployedDate': 'max', 'DeployedQuantity': 'sum', 'PONo': 'first'})
         shipped_agg = shipped_agg.reset_index()
         return shipped_agg
 
     def merge_materials_shipped(self, materials, shipped):
         materials = materials.copy()
         shipped = shipped.copy()
-        materials = materials.astype({'AuthNo': 'object'})
-        shipped = shipped.astype({'AuthNo': 'object'})
-        assert materials.dtypes['AuthNo'] == 'object'
-        assert shipped.dtypes['AuthNo'] == 'object'
+        materials = materials.astype({'AuthNo': 'int64'})
+        shipped = shipped.astype({'AuthNo': 'int64'})
+        assert (materials.dtypes[['AuthNo', 'ProjectSiteId', 'ItemNo']] == shipped.dtypes[['AuthNo', 'ProjectSiteId', 'ItemNo']]).all()
+        print(materials.dtypes)
+        print(shipped.dtypes)
         assert ((materials.ProjectSiteId.isin(shipped.ProjectSiteId)) & (materials.AuthNo.isin(shipped.AuthNo)) & (materials.ItemNo.isin(shipped.ItemNo))).sum() == 0
+        print(materials.columns)
         materials = materials.merge(shipped, how='left', on=['AuthNo', 'ProjectSiteId'])
+        materials.to_csv('materials-leftjoin-shipped.csv')
+        print(materials.shape)
         materials['ItemNo'] = materials.ItemNo_y.fillna(materials.ItemNo_x)
         materials = materials.reset_index()
         materials = materials.drop(['index', 'ItemNo_x', 'ItemNo_y'], axis=1)
@@ -87,6 +102,7 @@ class Pipeline:
         return materials
 
     def agg_received(self, received):
+        received = received.copy()
         def sum_qty_most_recent_everything_else(df):
             received_qty = df.ReceivedQuantity.sum()
             df = df.sort_values('ReceivedDate', ascending=False).head(1)
@@ -97,6 +113,10 @@ class Pipeline:
         return received_agg
 
     def transform(self, received, shipped, history, picked):
+        received = received.copy()
+        shipped = shipped.copy()
+        history = history.copy()
+        picked = picked.copy()
         received = self.agg_received(received)
         shipped = self.agg_shipped(shipped)
         history = self.agg_history(history)
@@ -124,12 +144,16 @@ class Pipeline:
 class MergePipeline(Pipeline):
 
     def transform(self, received, shipped, history, picked):
+        received = received.copy()
+        shipped = shipped.copy()
+        history = history.copy()
+        picked = picked.copy()
         history_agg = self.agg_history(history)
         picked_agg = self.agg_picked(picked)
-        materials = self.merge_history_picked(history_agg, picked_agg)
+        materials_1 = self.merge_history_picked(history_agg, picked_agg)
         shipped_agg = self.agg_shipped(shipped)
-        materials = self.merge_materials_shipped(materials, shipped)
-        received = self.agg_received(received)
-        received.name = 'InventoryReceived'
-        materials.name = 'InventoryStagedDeployed'
-        return received, materials
+        materials_2 = self.merge_materials_shipped(materials_1, shipped_agg)
+        received_agg = self.agg_received(received)
+        received_agg.name = 'InventoryReceived'
+        materials_2.name = 'InventoryStagedDeployed'
+        return received_agg, materials_2

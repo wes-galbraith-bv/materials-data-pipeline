@@ -3,7 +3,7 @@ class Config:
     username = "GEOMRE"
     password = "P@ssw!@#"
     server = "LSPR02-0402-87\\CUS7602TPTEST,48001"
-    database = "testdb"
+    database = "V3_Central"
     schema = "GeoMRE"
     directory = "//na/data/Corp/finance2/private/__Telecom Division/Tellworks/Reports/AIMS Reports"
     targets = (
@@ -23,17 +23,17 @@ class Config:
             'Auth#': 'AuthNo',
             'PACENum': 'ProjectSiteId',
             'PartNum': 'ItemNo',
-            'Qty': 'DeployedQuantity',
             'OrderNum': 'PONo',
-            'CustName': 'Subcontractor',
+            'Qty': 'DeployedQuantity',
             'ShipDate': 'DeployedDate'
          }),
         ('Site Equipment Deployment History', r'^SiteEquipDepData_.*\.csv$', 'SiteEquipmentDeploymentHistory',
          {
             'Pickup Auth #': 'AuthNo',
-            'Status': 'Status',
+            'Status': 'FulfillmentStatus',
             'Staged Date': 'StagedDate',
-            'PACENum': 'ProjectSiteId'
+            'PACENum': 'ProjectSiteId',
+            'Pickup Company': 'Subcontractor'
          }),
         ('Staged Inventory Details', r'^InventoryPickData_.*\.csv$', 'InventoryPicked',
          {

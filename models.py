@@ -17,7 +17,7 @@ class BaseItem:
 
 
 class ReceivedItem(BaseItem):
-    table = sa.Table('GeoMRE.InventoryReceived', db.metadata, autoload=True, autoload_with=db.engine)
+    table = sa.Table('InventoryReceived', db.metadata, autoload=True, autoload_with=db.engine)
 
     def __init__(self, **kwargs):
         for c in self.table.columns:
@@ -36,7 +36,7 @@ class ReceivedItem(BaseItem):
 
 
 class ShippedItem(BaseItem):
-    table = sa.Table('GeoMRE.InventoryShipped', db.metadata, autoload=True, autoload_with=db.engine)
+    table = sa.Table('InventoryShipped', db.metadata, autoload=True, autoload_with=db.engine)
 
     def __init__(self, **kwargs):
         for c in self.table.columns:
@@ -55,7 +55,7 @@ class ShippedItem(BaseItem):
 
 
 class PickedItem(BaseItem):
-    table = sa.Table('GeoMRE.InventoryPicked', db.metadata, autoload=True, autoload_with=db.engine)
+    table = sa.Table('InventoryPicked', db.metadata, autoload=True, autoload_with=db.engine)
 
     def __init__(self, **kwargs):
         for c in self.table.columns:
@@ -73,7 +73,7 @@ class PickedItem(BaseItem):
 
 
 class HistoryItem(BaseItem):
-    table = sa.Table('GeoMRE.SiteEquipmentDeploymentHistory', db.metadata, autoload=True, autoload_with=db.engine)
+    table = sa.Table('SiteEquipmentDeploymentHistory', db.metadata, autoload=True, autoload_with=db.engine)
 
     def __init__(self, **kwargs):
         for c in self.table.columns:
