@@ -1,13 +1,15 @@
-import urllib
 from datetime import datetime
+import logging
+import urllib
 
-import sqlalchemy as sa
 import pandas as pd
+import sqlalchemy as sa
 
 from config import Config
 
 class DatabaseManager:
     def __init__(self, driver, username, password, server, database, schema):
+        logging.info('creating database manager')
         self.driver = driver
         self.username = username
         self.password = password
@@ -31,12 +33,10 @@ class DatabaseManager:
 
 
     def insert_df(self, df):
-        print(f'inserting {len(df)} records from {df.name}')
-        print(f'time: {datetime.now().strftime("%H:%M:%S")}')
+        logging.info(f'inserting {len(df)} records from {df.name}')
         con = self.engine.connect()
         df.to_sql(df.name, schema=self.schema, con=con, if_exists='replace', index=False, chunksize=25000)
-        print(f'done inserting')
-        print(f'time: {datetime.now().strftime("%H:%M:%S")}')
+        logging.info(f'done inserting')
 
 
 db = DatabaseManager.from_object(Config)
