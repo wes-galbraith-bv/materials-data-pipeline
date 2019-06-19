@@ -1,4 +1,5 @@
-from logger import logger
+from logger import get_logger
+logger = get_logger()
 
 import pandas as pd
 

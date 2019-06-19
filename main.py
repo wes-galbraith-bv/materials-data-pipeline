@@ -1,6 +1,7 @@
 import os
 
-from logger import logger
+from logger import get_logger
+logger = get_logger()
 from pipeline import MergePipeline
 
 

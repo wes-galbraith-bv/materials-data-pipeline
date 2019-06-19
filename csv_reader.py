@@ -1,17 +1,19 @@
-from logger import logger
+from logger import get_logger, Loggable
+logger = get_logger()
 import os
 import re
 
 import pandas as pd
 
 
-class Target:
+class Target(Loggable):
     def __init__(self, directory, filename_regex, table_name, aliases):
         logger.info(f'creating target {directory} for csv reader')
         self.directory = directory
         self.filename_regex = filename_regex
         self.table_name = table_name
         self.aliases = aliases
+        logger.info(repr(self))
 
     def filter(self, f):
         return bool(re.match(self.filename_regex, f.name))
@@ -20,13 +22,14 @@ class Target:
         return self.directory
 
 
-class CSVReader:
+class CSVReader(Loggable):
     def __init__(self, root, targets=None):
         logger.info(f'creating CSVReader for directory {root}')
         self.root = root
         if targets:
             logger.info(f'target directories: {";".join(t for t in targets)}')
             self.targets = list(*targets)
+            logger.info(repr(self))
 
     def read(self):
         for t in self.targets:
@@ -40,4 +43,5 @@ class CSVReader:
             df = pd.read_csv(path_to_csv, usecols=usecols)
             df.columns = [t.aliases[c] for c in df.columns]
             df.name = t.table_name
+            
             yield df
