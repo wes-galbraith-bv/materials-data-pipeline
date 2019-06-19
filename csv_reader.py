@@ -7,14 +7,13 @@ import pandas as pd
 
 class Target:
     def __init__(self, directory, filename_regex, table_name, aliases):
-        logger.info('creating target for csv reader')
+        logger.info(f'creating target {directory} for csv reader')
         self.directory = directory
         self.filename_regex = filename_regex
         self.table_name = table_name
         self.aliases = aliases
 
     def filter(self, f):
-        logger.info(f'applying filter {self.filename_regex} to filenames')
         return bool(re.match(self.filename_regex, f.name))
 
     def __str__(self):

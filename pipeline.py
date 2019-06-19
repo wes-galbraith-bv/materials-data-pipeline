@@ -102,7 +102,6 @@ class Pipeline:
         except AssertionError as ae:
             logger.error(str(ae))
         materials = materials.merge(shipped, how='left', on=['AuthNo', 'ProjectSiteId'])
-        materials.to_csv('materials-leftjoin-shipped.csv')
         materials['ItemNo'] = materials.ItemNo_y.fillna(materials.ItemNo_x)
         materials = materials.reset_index()
         materials = materials.drop(['index', 'ItemNo_x', 'ItemNo_y'], axis=1)
