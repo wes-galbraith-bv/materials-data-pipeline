@@ -1,5 +1,5 @@
 from datetime import datetime
-import logging
+from logger import logger
 import urllib
 
 import pandas as pd
@@ -9,7 +9,7 @@ from config import Config
 
 class DatabaseManager:
     def __init__(self, driver, username, password, server, database, schema):
-        logging.info('creating database manager')
+        logger.info('creating database manager')
         self.driver = driver
         self.username = username
         self.password = password
@@ -33,10 +33,10 @@ class DatabaseManager:
 
 
     def insert_df(self, df):
-        logging.info(f'inserting {len(df)} records from {df.name}')
+        logger.info(f'inserting {len(df)} records from {df.name}')
         con = self.engine.connect()
         df.to_sql(df.name, schema=self.schema, con=con, if_exists='replace', index=False, chunksize=25000)
-        logging.info(f'done inserting')
+        logger.info(f'done inserting')
 
 
 db = DatabaseManager.from_object(Config)

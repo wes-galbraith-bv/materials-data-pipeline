@@ -1,19 +1,18 @@
-import logging
+import os
 
+from logger import logger
 from pipeline import MergePipeline
 
 
 def main():
-    logging.basicConfig(filename='pipeline.log', level=logging.INFO,
-                        format='%(asctime)s %(message)s',
-                        datefmt='%m/%d/%Y %I:%M:%S %p'))
-    logging.info('creating pipeline')
+    logger.info('creating pipeline')
     pipeline = MergePipeline()
     try:
         pipeline.run()
     except Exception as e:
-        logging.error(str(e))
+        logger.error(str(e), exc_info=True)
 
 
 if __name__ == '__main__':
+
     main()
