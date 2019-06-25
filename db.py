@@ -1,5 +1,6 @@
 from datetime import datetime
-from logger import logger
+from logger import get_logger, Loggable
+logger = get_logger()
 import urllib
 
 import pandas as pd
@@ -7,7 +8,7 @@ import sqlalchemy as sa
 
 from config import Config
 
-class DatabaseManager:
+class DatabaseManager(Loggable):
     def __init__(self, driver, username, password, server, database, schema):
         logger.info('creating database manager')
         self.driver = driver
@@ -26,6 +27,9 @@ class DatabaseManager:
         quoted = urllib.parse.quote_plus(conn_str)
         self.engine = sa.create_engine(f'mssql+pyodbc:///?odbc_connect={quoted}',
                                        fast_executemany=True)
+
+        logger.info(repr(self))
+
 
     @classmethod
     def from_object(cls, config):
