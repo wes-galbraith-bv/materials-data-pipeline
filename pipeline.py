@@ -15,6 +15,10 @@ class Pipeline:
         csv_reader = CSVReader(Config.directory)
         csv_reader.targets = [Target(*params) for params in Config.targets]
         received, shipped, history, picked = csv_reader.read()
+        received.to_csv('data/received.csv')
+        shipped.to_csv('data/shipped.csv')
+        history.to_csv('data/history.csv')
+        picked.to_csv('data/picked.csv')
         return received, shipped, history, picked
 
     def clean(self, received, shipped, history, picked):
@@ -49,6 +53,43 @@ class Pipeline:
         shipped['ProjectSiteId'] = shipped.ProjectSiteId.str.replace('[a-zA-Z]{5}', to_upper)
         history['ProjectSiteId'] = history.ProjectSiteId.str.replace('[a-zA-Z]{5}', to_upper)
         picked['ProjectSiteId'] = picked.ProjectSiteId.str.replace('[a-zA-Z]{5}', to_upper)
+
+        # set datatypes
+
+        received = received.astype({
+            'ReceivedDate': 'datetime64',
+            'ItemNo': 'object',
+            'ItemDescription': 'object',
+            'WarehouseLocation': 'object',
+            'ReceivedQuantity': 'int64',
+            'ProjectSiteId': 'object',
+            'PONo': 'object',
+            'InventoryType': 'object'
+        })
+
+        shipped = shipped.astype({
+            'AuthNo': 'object',
+            'ProjectSiteId': 'object',
+            'ItemNo': 'object',
+            'PONo': 'object',
+            'DeployedQuantity': 'int64',
+            'DeployedDate': 'datetime64'
+        })
+
+        history = history.astype({
+            'AuthNo': 'object',
+            'FulfillmentStatus': 'object',
+            'StagedDate': 'datetime64',
+            'ProjectSiteId': 'object',
+            'Subcontractor': 'object'
+        })
+
+        picked = picked.astype({
+            'ItemNo': 'object',
+            'AuthNo': 'object',
+            'StagedQuantity': 'int64',
+            'ProjectSiteId': 'object'
+        })
 
         return received, shipped, history, picked
 

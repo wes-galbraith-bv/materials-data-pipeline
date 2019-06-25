@@ -1,3 +1,5 @@
+from sqlalchemy.types import Integer, String, DateTime
+
 class Config:
     driver = "SQL Server Native Client 11.0"
     username = "GEOMRE"
@@ -43,4 +45,27 @@ class Config:
             'PACENum': 'ProjectSiteId'
          })
     )
-    logfile = 'C:\\Users\\gal98383\\projects\\materials_api\\logs\\info.log'
+    dtypes = {
+        'InventoryReceived': {
+            'ReceivedDate': DateTime(),
+            'ItemNo': String(100),
+            'ItemDescription': String(1000),
+            'WarehouseLocation': String(500),
+            'ReceivedQuantity': Integer(),
+            'ProjectSiteId': String(100),
+            'PONo': String(100),
+            'InventoryType': String(100)
+        },
+        'InventoryStagedDeployed': {
+            'AuthNo': String(100),
+            'ProjectSiteId': String(100),
+            'FulfillmentStatus': String(100),
+            'StagedDate': DateTime(),
+            'Subcontractor': String(200),
+            'StagedQuantity': Integer(),
+            'DeployedDate': DateTime(),
+            'DeployedQuantity': Integer(),
+            'PONo': String(100),
+            'ItemNo': String(100)
+        }
+    }

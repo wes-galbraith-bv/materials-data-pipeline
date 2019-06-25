@@ -1,5 +1,10 @@
 venv
 __pycache__/*
 __pycache__
+<<<<<<< HEAD
 logs
 logs/*
+=======
+pipeline.log
+data
+>>>>>>> master
