@@ -154,9 +154,12 @@ class Pipeline:
         logger.info('aggregating inventory received report')
         received = received.copy()
         def sum_qty_most_recent_everything_else(df):
+            # aggregate RecievedQuantityColumn by summing, every other column comes from the record with the most recent ReceivedDate column
             received_qty = df.ReceivedQuantity.sum()
-            df = df.sort_values('ReceivedDate', ascending=False).head(1)
-            df['ReceivedQuantity'] = received_qty
+            max_received_date = df.ReceivedDate.max() # get max received date
+            max_received_row = df.loc[df.ReceivedDate == max_received_date].head(1)
+            max_received_row.loc[1, 'ReceivedQuantity'] = received_qty
+            df = pd.DataFrame(max_received_row.to_dict())
             return df
         grouped = received.groupby(by=['ProjectSiteId','ItemNo', 'PONo'])
         received_agg = grouped.apply(sum_qty_most_recent_everything_else)

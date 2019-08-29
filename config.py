@@ -3,8 +3,8 @@ from sqlalchemy.types import Integer, String, DateTime
 class Config:
     driver = "SQL Server Native Client 11.0"
     username = "GEOMRE"
-    password = "P@ssw!@#"
-    server = "LSPR02-0402-87\\CUS7602TPTEST,48001"
+    password = "Passw!@#"
+    server = "199.73.50.120\\CUS7602TP3,48000"
     database = "V3_Central"
     schema = "GeoMRE"
     directory = "//na/data/Corp/finance2/private/__Telecom Division/Tellworks/Reports/AIMS Reports"
